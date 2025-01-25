@@ -1,7 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Replace these with your Supabase project URL and anon key
-const supabaseUrl = 'https://your-project-url.supabase.co';
-const supabaseKey = 'your-anon-key';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+below i have attached my supabase project url and anon-key ,now connect to my supabase project backend
+import { createClient } from '@supabase/supabase-js'
+const supabaseUrl = 'https://jisvpfaxmzvvlvefzgvk.supabase.co'
+const supabaseKey = process.env.SUPABASE_KEY
+const supabase = createClient(supabaseUrl, supabaseKey)
