@@ -36,15 +36,55 @@ export default function AcademicMarks() {
 
     // Check if user has already submitted marks
     const checkMarks = async () => {
-      const { data, error } = await supabase
-        .from("academic_marks")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle(); // Changed from .single() to .maybeSingle()
+      try {
+        // First, ensure the profile exists
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      if (data) {
-        // If marks exist, redirect to dashboard
-        navigate("/");
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          return;
+        }
+
+        if (!profileData) {
+          // Create profile if it doesn't exist
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert([
+              {
+                id: user.id,
+                email: user.email,
+                updated_at: new Date().toISOString(),
+              }
+            ]);
+
+          if (insertError) {
+            console.error("Error creating profile:", insertError);
+            return;
+          }
+        }
+
+        // Now check for academic marks
+        const { data, error } = await supabase
+          .from("academic_marks")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error checking marks:", error);
+          return;
+        }
+
+        if (data) {
+          // If marks exist, redirect to dashboard
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Error in checkMarks:", error);
       }
     };
 
