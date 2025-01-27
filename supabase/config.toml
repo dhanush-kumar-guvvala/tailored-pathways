@@ -1,1 +1,10 @@
 project_id = "jisvpfaxmzvvlvefzgvk"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[[functions]]
+name = "analyze-academic-marks"
+verify_jwt = true
