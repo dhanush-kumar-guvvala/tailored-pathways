@@ -36,17 +36,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      
+      if (error) {
+        if (error.message === 'Email not confirmed') {
+          toast({
+            title: "Email not verified",
+            description: "Please check your email and click the verification link to confirm your account.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Error signing in",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+        throw error;
+      }
+
       toast({
         title: "Welcome back!",
         description: "You've successfully signed in.",
       });
     } catch (error: any) {
-      toast({
-        title: "Error signing in",
-        description: error.message,
-        variant: "destructive",
-      });
+      console.error('Error signing in:', error);
       throw error;
     }
   };
@@ -55,7 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Starting signup process...');
       
-      // First, create the auth user with metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -78,24 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Auth user created successfully:', authData.user.id);
 
-      // Wait a moment to ensure the session is established
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Get the current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        console.error('Session error:', sessionError);
-        throw sessionError;
-      }
-
-      if (!session) {
-        console.error('No session established');
-        throw new Error('Failed to establish user session');
-      }
-
-      console.log('Session established successfully');
-
       // Create the profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -117,8 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Profile created successfully');
 
       toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
+        title: "Account created!",
+        description: "Please check your email for the verification link to complete your registration.",
       });
     } catch (error: any) {
       console.error('Signup process error:', error);
