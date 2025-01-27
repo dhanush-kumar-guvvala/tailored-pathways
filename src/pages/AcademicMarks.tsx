@@ -34,7 +34,6 @@ export default function AcademicMarks() {
       return;
     }
 
-    // Check if user has already submitted marks
     const checkMarks = async () => {
       try {
         // First, ensure the profile exists
@@ -45,7 +44,11 @@ export default function AcademicMarks() {
           .maybeSingle();
 
         if (profileError) {
-          console.error("Error fetching profile:", profileError);
+          toast({
+            title: "Error checking profile",
+            description: profileError.message,
+            variant: "destructive",
+          });
           return;
         }
 
@@ -62,34 +65,46 @@ export default function AcademicMarks() {
             ]);
 
           if (insertError) {
-            console.error("Error creating profile:", insertError);
+            toast({
+              title: "Error creating profile",
+              description: insertError.message,
+              variant: "destructive",
+            });
             return;
           }
         }
 
         // Now check for academic marks
-        const { data, error } = await supabase
+        const { data: marksData, error: marksError } = await supabase
           .from("academic_marks")
           .select("*")
           .eq("user_id", user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error("Error checking marks:", error);
+        if (marksError) {
+          toast({
+            title: "Error checking marks",
+            description: marksError.message,
+            variant: "destructive",
+          });
           return;
         }
 
-        if (data) {
+        if (marksData) {
           // If marks exist, redirect to dashboard
           navigate("/");
         }
-      } catch (error) {
-        console.error("Error in checkMarks:", error);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive",
+        });
       }
     };
 
     checkMarks();
-  }, [user, navigate]);
+  }, [user, navigate, toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -112,7 +127,33 @@ export default function AcademicMarks() {
         [key]: value === "" ? null : parseFloat(value)
       }), {});
 
-      const { error } = await supabase
+      // Double-check that profile exists before inserting marks
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      if (!profile) {
+        // Create profile if it still doesn't exist
+        const { error: insertProfileError } = await supabase
+          .from("profiles")
+          .insert([
+            {
+              id: user.id,
+              email: user.email,
+              updated_at: new Date().toISOString(),
+            }
+          ]);
+
+        if (insertProfileError) throw insertProfileError;
+      }
+
+      const { error: marksError } = await supabase
         .from("academic_marks")
         .insert([
           {
@@ -121,7 +162,7 @@ export default function AcademicMarks() {
           }
         ]);
 
-      if (error) throw error;
+      if (marksError) throw marksError;
 
       toast({
         title: "Success!",
@@ -352,4 +393,4 @@ export default function AcademicMarks() {
       </div>
     </div>
   );
-}
+};
