@@ -6,5 +6,5 @@ port = 54321
 schemas = ["public", "storage", "graphql_public"]
 
 [[functions]]
-name = "analyze-academic-marks"
+[functions.analyze-academic-marks]
 verify_jwt = true
