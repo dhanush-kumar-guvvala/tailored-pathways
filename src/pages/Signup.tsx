@@ -11,20 +11,35 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [lastAttempt, setLastAttempt] = useState(0);
   const navigate = useNavigate();
   const { signUp } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check if enough time has passed since last attempt (3 seconds)
+    const now = Date.now();
+    if (now - lastAttempt < 3000) {
+      const remainingTime = Math.ceil((3000 - (now - lastAttempt)) / 1000);
+      console.log(`Please wait ${remainingTime} seconds before trying again`);
+      return;
+    }
+
     try {
       setLoading(true);
+      setLastAttempt(now);
       await signUp(email, password, {
         full_name: fullName,
         avatar_url: "",
       });
       navigate("/");
-    } catch (error) {
-      console.error("Error signing up:", error);
+    } catch (error: any) {
+      if (error.message.includes('rate_limit')) {
+        console.error("Please wait a few seconds before trying again");
+      } else {
+        console.error("Error signing up:", error);
+      }
     } finally {
       setLoading(false);
     }
