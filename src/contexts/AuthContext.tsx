@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
+      // First, sign up the user with Supabase Auth
       const { error: signUpError, data } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -63,21 +64,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (signUpError) throw signUpError;
 
-      // Insert additional user data into the profiles table
+      // Only proceed with profile creation if we have a user
       if (data.user) {
+        // Insert profile using the auth user's ID
         const { error: profileError } = await supabase
           .from('profiles')
           .insert([
             {
-              id: data.user.id,
+              id: data.user.id, // This is crucial - use the auth user's ID
               email: email,
               full_name: userData.full_name,
-              avatar_url: userData.avatar_url,
+              avatar_url: userData.avatar_url || '',
               updated_at: new Date().toISOString(),
             }
           ]);
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw profileError;
+        }
       }
 
       toast({
