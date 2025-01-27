@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -53,27 +53,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
-      // First, create the auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      console.log('Starting signup process...');
+      
+      // First, create the auth user with metadata
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData,
+          data: {
+            full_name: userData.full_name,
+          },
         },
       });
 
-      if (authError) throw authError;
-
-      // Wait for the session to be established
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      if (!session || !authData.user) {
-        throw new Error('Failed to create user session');
+      if (signUpError) {
+        console.error('Signup error:', signUpError);
+        throw signUpError;
       }
 
-      // Now create the profile with the authenticated session
+      if (!authData.user) {
+        console.error('No user data returned from signup');
+        throw new Error('Failed to create user account');
+      }
+
+      console.log('Auth user created successfully:', authData.user.id);
+
+      // Wait a moment to ensure the session is established
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw sessionError;
+      }
+
+      if (!session) {
+        console.error('No session established');
+        throw new Error('Failed to establish user session');
+      }
+
+      console.log('Session established successfully');
+
+      // Create the profile
       const { error: profileError } = await supabase
         .from('profiles')
         .insert([
@@ -91,11 +114,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw profileError;
       }
 
+      console.log('Profile created successfully');
+
       toast({
         title: "Welcome!",
         description: "Your account has been created successfully.",
       });
     } catch (error: any) {
+      console.error('Signup process error:', error);
       toast({
         title: "Error signing up",
         description: error.message,
