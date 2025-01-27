@@ -1,24 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Navigation } from "@/components/Navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+
+  useEffect(() => {
+    const checkMarksAndRedirect = async () => {
+      if (user) {
+        // Check if user has submitted academic marks
+        const { data, error } = await supabase
+          .from("academic_marks")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error || !data) {
+          navigate("/academic-marks");
+        } else {
+          navigate("/");
+        }
+      }
+    };
+
+    checkMarksAndRedirect();
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setLoading(true);
       await signIn(email, password);
-      navigate("/");
+      // Redirect will be handled by the useEffect
     } catch (error) {
       console.error("Error signing in:", error);
     } finally {

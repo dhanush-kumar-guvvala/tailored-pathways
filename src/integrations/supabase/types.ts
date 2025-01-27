@@ -9,6 +9,78 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      academic_marks: {
+        Row: {
+          class_10_english: number | null
+          class_10_math: number | null
+          class_10_science: number | null
+          class_10_social: number | null
+          class_11_chemistry: number | null
+          class_11_english: number | null
+          class_11_math: number | null
+          class_11_physics: number | null
+          class_12_chemistry: number | null
+          class_12_english: number | null
+          class_12_math: number | null
+          class_12_physics: number | null
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          class_10_english?: number | null
+          class_10_math?: number | null
+          class_10_science?: number | null
+          class_10_social?: number | null
+          class_11_chemistry?: number | null
+          class_11_english?: number | null
+          class_11_math?: number | null
+          class_11_physics?: number | null
+          class_12_chemistry?: number | null
+          class_12_english?: number | null
+          class_12_math?: number | null
+          class_12_physics?: number | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          class_10_english?: number | null
+          class_10_math?: number | null
+          class_10_science?: number | null
+          class_10_social?: number | null
+          class_11_chemistry?: number | null
+          class_11_english?: number | null
+          class_11_math?: number | null
+          class_11_physics?: number | null
+          class_12_chemistry?: number | null
+          class_12_english?: number | null
+          class_12_math?: number | null
+          class_12_physics?: number | null
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academic_marks_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

@@ -10,6 +10,7 @@ import AdaptiveLearning from "./pages/AdaptiveLearning";
 import CareerGuidance from "./pages/CareerGuidance";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import AcademicMarks from "./pages/AcademicMarks";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/career-guidance" element={<CareerGuidance />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/academic-marks" element={<AcademicMarks />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
