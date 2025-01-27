@@ -53,36 +53,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, userData: any) => {
     try {
-      // First, sign up the user with Supabase Auth
-      const { error: signUpError, data } = await supabase.auth.signUp({ 
-        email, 
+      // First, create the auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
         password,
         options: {
-          data: userData
-        }
+          data: userData,
+        },
       });
-      
-      if (signUpError) throw signUpError;
 
-      // Only proceed with profile creation if we have a user
-      if (data.user) {
-        // Insert profile using the auth user's ID
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: data.user.id, // This is crucial - use the auth user's ID
-              email: email,
-              full_name: userData.full_name,
-              avatar_url: userData.avatar_url || '',
-              updated_at: new Date().toISOString(),
-            }
-          ]);
+      if (authError) throw authError;
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          throw profileError;
-        }
+      // Wait for the session to be established
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session || !authData.user) {
+        throw new Error('Failed to create user session');
+      }
+
+      // Now create the profile with the authenticated session
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: authData.user.id,
+            email: email,
+            full_name: userData.full_name,
+            avatar_url: userData.avatar_url || '',
+            updated_at: new Date().toISOString(),
+          }
+        ]);
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw profileError;
       }
 
       toast({
