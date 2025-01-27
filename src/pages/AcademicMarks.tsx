@@ -40,7 +40,7 @@ export default function AcademicMarks() {
         .from("academic_marks")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle(); // Changed from .single() to .maybeSingle()
 
       if (data) {
         // If marks exist, redirect to dashboard
