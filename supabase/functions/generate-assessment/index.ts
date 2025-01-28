@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { academicMarks, userId } = await req.json();
+    console.log('Received request with marks:', academicMarks);
 
     // Find subjects with highest and lowest marks
     const subjects = [
@@ -35,59 +36,109 @@ serve(async (req) => {
     const highestSubject = sortedSubjects[0];
     const lowestSubject = sortedSubjects[sortedSubjects.length - 1];
 
-    // Create prompt for Gemini
-    const prompt = `Based on the following academic performance:
-    
-    Highest performing subject: ${highestSubject.name} with ${highestSubject.marks}%
-    Lowest performing subject: ${lowestSubject.name} with ${lowestSubject.marks}%
-    
-    Please provide:
-    1. 5 assessment questions for ${lowestSubject.name} to help improve understanding
-    2. A detailed career roadmap that leverages the strength in ${highestSubject.name} while addressing the weakness in ${lowestSubject.name}
-    
-    Format the response as a JSON object with these sections:
+    console.log('Highest subject:', highestSubject);
+    console.log('Lowest subject:', lowestSubject);
+
+    // Create a more structured prompt for Gemini
+    const prompt = `You are an educational assessment expert. Based on the following academic performance data:
+
+Highest performing subject: ${highestSubject.name} (${highestSubject.marks}%)
+Lowest performing subject: ${lowestSubject.name} (${lowestSubject.marks}%)
+
+Please generate:
+
+1. Five multiple-choice assessment questions for ${lowestSubject.name} to help improve understanding. Each question should:
+   - Be clear and concise
+   - Have exactly four options (A, B, C, D)
+   - Include one correct answer
+   - Be appropriate for the subject level
+
+2. A detailed career roadmap that:
+   - Leverages the strength in ${highestSubject.name}
+   - Addresses the weakness in ${lowestSubject.name}
+   - Includes specific milestones and timeframes
+   - Lists required skills and potential roles
+
+Format your response as a valid JSON object with this exact structure:
+{
+  "assessmentQuestions": [
     {
-      "assessmentQuestions": [
-        { "question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": "..." }
-      ],
-      "careerRoadmap": {
-        "recommendedPaths": [
+      "question": "string",
+      "options": ["string", "string", "string", "string"],
+      "correctAnswer": "string"
+    }
+  ],
+  "careerRoadmap": {
+    "recommendedPaths": [
+      {
+        "title": "string",
+        "description": "string",
+        "milestones": [
           {
-            "title": "...",
-            "description": "...",
-            "milestones": [
-              { "title": "...", "timeframe": "...", "description": "..." }
-            ],
-            "requiredSkills": ["..."],
-            "potentialRoles": ["..."]
+            "title": "string",
+            "timeframe": "string",
+            "description": "string"
           }
-        ]
+        ],
+        "requiredSkills": ["string"],
+        "potentialRoles": ["string"]
       }
-    }`;
+    ]
+  }
+}`;
+
+    console.log('Sending prompt to Gemini API');
 
     // Call Gemini API
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         contents: [{
           parts: [{
             text: prompt
           }]
-        }]
-      })
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        },
+      }),
     });
 
-    const data = await response.json();
-    
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      throw new Error('Invalid response from Gemini API');
+    if (!response.ok) {
+      console.error('Gemini API error:', await response.text());
+      throw new Error('Failed to get response from Gemini API');
     }
 
-    const assessment = JSON.parse(data.candidates[0].content.parts[0].text);
+    const data = await response.json();
+    console.log('Received response from Gemini API:', data);
+
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      console.error('Invalid Gemini API response structure:', data);
+      throw new Error('Invalid response structure from Gemini API');
+    }
+
+    let assessment;
+    try {
+      assessment = JSON.parse(data.candidates[0].content.parts[0].text);
+      console.log('Successfully parsed assessment:', assessment);
+    } catch (error) {
+      console.error('JSON parsing error:', error);
+      console.error('Raw text:', data.candidates[0].content.parts[0].text);
+      throw new Error('Failed to parse Gemini API response as JSON');
+    }
+
+    // Validate assessment structure
+    if (!assessment.assessmentQuestions || !assessment.careerRoadmap) {
+      console.error('Invalid assessment structure:', assessment);
+      throw new Error('Invalid assessment data structure');
+    }
 
     // Store assessment in Supabase
     const supabase = createClient(
@@ -106,8 +157,11 @@ serve(async (req) => {
       });
 
     if (upsertError) {
+      console.error('Supabase upsert error:', upsertError);
       throw upsertError;
     }
+
+    console.log('Successfully stored assessment in database');
 
     return new Response(
       JSON.stringify({ success: true, assessment }),
@@ -117,7 +171,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in generate-assessment function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }),
       { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
