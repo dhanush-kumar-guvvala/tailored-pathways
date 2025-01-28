@@ -38,7 +38,7 @@ serve(async (req) => {
     English: ${academicMarks.class_12_english}
 
     Please provide:
-    1. Top 3 recommended career paths based on academic strengths
+    1. Top 3 recommended career paths based on academic strengths in JSON format
     2. For each career path:
        - Required skills and qualifications
        - Suggested courses and certifications
