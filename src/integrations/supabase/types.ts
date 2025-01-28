@@ -11,54 +11,54 @@ export type Database = {
     Tables: {
       academic_marks: {
         Row: {
-          class_10_english: number | null
-          class_10_math: number | null
-          class_10_science: number | null
-          class_10_social: number | null
-          class_11_chemistry: number | null
-          class_11_english: number | null
-          class_11_math: number | null
-          class_11_physics: number | null
-          class_12_chemistry: number | null
-          class_12_english: number | null
-          class_12_math: number | null
-          class_12_physics: number | null
+          class_10_english: number
+          class_10_math: number
+          class_10_science: number
+          class_10_social: number
+          class_11_chemistry: number
+          class_11_english: number
+          class_11_math: number
+          class_11_physics: number
+          class_12_chemistry: number
+          class_12_english: number
+          class_12_math: number
+          class_12_physics: number
           created_at: string | null
           id: string
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          class_10_english?: number | null
-          class_10_math?: number | null
-          class_10_science?: number | null
-          class_10_social?: number | null
-          class_11_chemistry?: number | null
-          class_11_english?: number | null
-          class_11_math?: number | null
-          class_11_physics?: number | null
-          class_12_chemistry?: number | null
-          class_12_english?: number | null
-          class_12_math?: number | null
-          class_12_physics?: number | null
+          class_10_english?: number
+          class_10_math?: number
+          class_10_science?: number
+          class_10_social?: number
+          class_11_chemistry?: number
+          class_11_english?: number
+          class_11_math?: number
+          class_11_physics?: number
+          class_12_chemistry?: number
+          class_12_english?: number
+          class_12_math?: number
+          class_12_physics?: number
           created_at?: string | null
           id?: string
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          class_10_english?: number | null
-          class_10_math?: number | null
-          class_10_science?: number | null
-          class_10_social?: number | null
-          class_11_chemistry?: number | null
-          class_11_english?: number | null
-          class_11_math?: number | null
-          class_11_physics?: number | null
-          class_12_chemistry?: number | null
-          class_12_english?: number | null
-          class_12_math?: number | null
-          class_12_physics?: number | null
+          class_10_english?: number
+          class_10_math?: number
+          class_10_science?: number
+          class_10_social?: number
+          class_11_chemistry?: number
+          class_11_english?: number
+          class_11_math?: number
+          class_11_physics?: number
+          class_12_chemistry?: number
+          class_12_english?: number
+          class_12_math?: number
+          class_12_physics?: number
           created_at?: string | null
           id?: string
           updated_at?: string | null
