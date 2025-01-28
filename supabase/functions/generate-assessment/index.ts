@@ -39,6 +39,12 @@ serve(async (req) => {
     console.log('Highest subject:', highestSubject);
     console.log('Lowest subject:', lowestSubject);
 
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not found in environment variables');
+      throw new Error('GEMINI_API_KEY not configured');
+    }
+
     // Create a more structured prompt for Gemini
     const prompt = `You are an educational assessment expert. Based on the following academic performance data:
 
@@ -89,84 +95,92 @@ Format your response as a valid JSON object with this exact structure:
 
     console.log('Sending prompt to Gemini API');
 
-    // Call Gemini API
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      console.error('Gemini API error:', await response.text());
-      throw new Error('Failed to get response from Gemini API');
-    }
-
-    const data = await response.json();
-    console.log('Received response from Gemini API:', data);
-
-    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-      console.error('Invalid Gemini API response structure:', data);
-      throw new Error('Invalid response structure from Gemini API');
-    }
-
-    let assessment;
     try {
-      assessment = JSON.parse(data.candidates[0].content.parts[0].text);
-      console.log('Successfully parsed assessment:', assessment);
-    } catch (error) {
-      console.error('JSON parsing error:', error);
-      console.error('Raw text:', data.candidates[0].content.parts[0].text);
-      throw new Error('Failed to parse Gemini API response as JSON');
-    }
-
-    // Validate assessment structure
-    if (!assessment.assessmentQuestions || !assessment.careerRoadmap) {
-      console.error('Invalid assessment structure:', assessment);
-      throw new Error('Invalid assessment data structure');
-    }
-
-    // Store assessment in Supabase
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const { error: upsertError } = await supabase
-      .from('assessments')
-      .upsert({
-        user_id: userId,
-        assessment_data: assessment,
-        highest_subject: highestSubject,
-        lowest_subject: lowestSubject,
-        created_at: new Date().toISOString()
+      // Call Gemini API with proper error handling
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${GEMINI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.7,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 2048, // Increased token limit
+          },
+        }),
       });
 
-    if (upsertError) {
-      console.error('Supabase upsert error:', upsertError);
-      throw upsertError;
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Gemini API error response:', errorText);
+        throw new Error(`Gemini API returned status ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('Received response from Gemini API:', JSON.stringify(data, null, 2));
+
+      if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        console.error('Invalid Gemini API response structure:', data);
+        throw new Error('Invalid response structure from Gemini API');
+      }
+
+      let assessment;
+      try {
+        const responseText = data.candidates[0].content.parts[0].text;
+        console.log('Raw response text:', responseText);
+        assessment = JSON.parse(responseText);
+        console.log('Successfully parsed assessment:', assessment);
+      } catch (error) {
+        console.error('JSON parsing error:', error);
+        throw new Error('Failed to parse Gemini API response as JSON');
+      }
+
+      // Validate assessment structure
+      if (!assessment.assessmentQuestions || !assessment.careerRoadmap) {
+        console.error('Invalid assessment structure:', assessment);
+        throw new Error('Invalid assessment data structure');
+      }
+
+      // Store assessment in Supabase
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+
+      const { error: upsertError } = await supabase
+        .from('assessments')
+        .upsert({
+          user_id: userId,
+          assessment_data: assessment,
+          highest_subject: highestSubject,
+          lowest_subject: lowestSubject,
+          created_at: new Date().toISOString()
+        });
+
+      if (upsertError) {
+        console.error('Supabase upsert error:', upsertError);
+        throw upsertError;
+      }
+
+      console.log('Successfully stored assessment in database');
+
+      return new Response(
+        JSON.stringify({ success: true, assessment }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } catch (error) {
+      console.error('Error in Gemini API call:', error);
+      throw new Error(`Failed to get response from Gemini API: ${error.message}`);
     }
-
-    console.log('Successfully stored assessment in database');
-
-    return new Response(
-      JSON.stringify({ success: true, assessment }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error) {
     console.error('Error in generate-assessment function:', error);
