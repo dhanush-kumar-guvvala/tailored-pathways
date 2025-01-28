@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { AssessmentDisplay } from "@/components/AssessmentDisplay";
 
 export default function AcademicMarks() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [showAssessment, setShowAssessment] = useState(false);
   const [marks, setMarks] = useState({
     class_10_math: "",
     class_10_science: "",
@@ -36,7 +38,6 @@ export default function AcademicMarks() {
 
     const checkMarks = async () => {
       try {
-        // First, ensure the profile exists
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("id")
@@ -53,7 +54,6 @@ export default function AcademicMarks() {
         }
 
         if (!profileData) {
-          // Create profile if it doesn't exist
           const { error: insertError } = await supabase
             .from("profiles")
             .insert([
@@ -74,7 +74,6 @@ export default function AcademicMarks() {
           }
         }
 
-        // Now check for academic marks
         const { data: marksData, error: marksError } = await supabase
           .from("academic_marks")
           .select("*")
@@ -91,8 +90,15 @@ export default function AcademicMarks() {
         }
 
         if (marksData) {
-          // If marks exist, redirect to dashboard
-          navigate("/");
+          const { data: assessmentData, error: assessmentError } = await supabase
+            .from("assessments")
+            .select("*")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (!assessmentError && assessmentData) {
+            setShowAssessment(true);
+          }
         }
       } catch (error: any) {
         toast({
@@ -121,13 +127,11 @@ export default function AcademicMarks() {
     try {
       setLoading(true);
       
-      // Convert string values to numbers
       const numericMarks = Object.entries(marks).reduce((acc, [key, value]) => ({
         ...acc,
         [key]: value === "" ? null : parseFloat(value)
       }), {});
 
-      // Double-check that profile exists before inserting marks
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("id")
@@ -139,7 +143,6 @@ export default function AcademicMarks() {
       }
 
       if (!profile) {
-        // Create profile if it still doesn't exist
         const { error: insertProfileError } = await supabase
           .from("profiles")
           .insert([
@@ -164,12 +167,22 @@ export default function AcademicMarks() {
 
       if (marksError) throw marksError;
 
+      // Generate assessment and career roadmap
+      const { data: assessmentResponse, error: assessmentError } = await supabase.functions.invoke(
+        'generate-assessment',
+        {
+          body: { academicMarks: numericMarks, userId: user.id }
+        }
+      );
+
+      if (assessmentError) throw assessmentError;
+
       toast({
         title: "Success!",
-        description: "Your academic marks have been saved.",
+        description: "Your academic marks have been saved and assessment has been generated.",
       });
 
-      navigate("/");
+      setShowAssessment(true);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -180,6 +193,19 @@ export default function AcademicMarks() {
       setLoading(false);
     }
   };
+
+  if (showAssessment) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <div className="pt-24 px-4">
+          <div className="max-w-4xl mx-auto">
+            <AssessmentDisplay />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -393,4 +419,4 @@ export default function AcademicMarks() {
       </div>
     </div>
   );
-};
+}
