@@ -17,7 +17,7 @@ serve(async (req) => {
     const { academicMarks, userId } = await req.json();
 
     // Create the prompt for Gemini
-    const prompt = `create a JSON format  career path file ,Based on the following academic marks, suggest career paths and provide a detailed roadmap for each suggested career. Focus on the student's strengths.
+    const prompt = `Based on the following academic marks, suggest career paths and provide a detailed roadmap for each suggested career. Focus on the student's strengths.
 
     Class 10:
     Mathematics: ${academicMarks.class_10_math}
@@ -38,7 +38,7 @@ serve(async (req) => {
     English: ${academicMarks.class_12_english}
 
     Please provide:
-    1. Top 3 recommended career paths based on academic strengths in JSON format
+    1. Top 3 recommended career paths based on academic strengths
     2. For each career path:
        - Required skills and qualifications
        - Suggested courses and certifications
@@ -53,7 +53,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('AIzasyD6hnbzYq5K0xn7AhJOLAmun7nOWYioTao')}`,
+        'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
       },
       body: JSON.stringify({
         contents: [{
