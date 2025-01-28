@@ -16,8 +16,8 @@ serve(async (req) => {
     const { academicMarks, userId } = await req.json();
     console.log('Received request with marks:', academicMarks);
 
-    const GEMINI_API_KEY = Deno.env.get('Gemini-API-KEY');
-    if (!GEMINI_API_KEY) {
+    const geminiApiKey = Deno.env.get('Gemini-API-KEY');
+    if (!geminiApiKey) {
       console.error('Gemini-API-KEY not found in environment variables');
       throw new Error('Gemini-API-KEY not configured');
     }
@@ -98,7 +98,7 @@ Format your response as a valid JSON object with this exact structure:
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${GEMINI_API_KEY}`,
+          'Authorization': `Bearer ${geminiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
