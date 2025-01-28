@@ -16,10 +16,13 @@ serve(async (req) => {
     const { academicMarks, userId } = await req.json();
     console.log('Received request with marks:', academicMarks);
 
-    const geminiApiKey = Deno.env.get('Gemini-API-KEY');
+    // Get the API key and log its presence (without revealing the key)
+    const geminiApiKey = Deno.env.get('Gemini-API_KEY');
+    console.log('Gemini API Key present:', !!geminiApiKey);
+    
     if (!geminiApiKey) {
-      console.error('Gemini-API-KEY not found in environment variables');
-      throw new Error('Gemini-API-KEY not configured');
+      console.error('Gemini API Key not found in environment variables');
+      throw new Error('Gemini API Key not configured. Please check the secret name and value.');
     }
 
     // Find subjects with highest and lowest marks
