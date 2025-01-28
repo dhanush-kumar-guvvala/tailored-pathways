@@ -16,6 +16,12 @@ serve(async (req) => {
     const { academicMarks, userId } = await req.json();
     console.log('Received request with marks:', academicMarks);
 
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    if (!GEMINI_API_KEY) {
+      console.error('GEMINI_API_KEY not found in environment variables');
+      throw new Error('GEMINI_API_KEY not configured');
+    }
+
     // Find subjects with highest and lowest marks
     const subjects = [
       { name: 'Mathematics (10th)', marks: academicMarks.class_10_math },
@@ -39,13 +45,6 @@ serve(async (req) => {
     console.log('Highest subject:', highestSubject);
     console.log('Lowest subject:', lowestSubject);
 
-    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-    if (!GEMINI_API_KEY) {
-      console.error('GEMINI_API_KEY not found in environment variables');
-      throw new Error('GEMINI_API_KEY not configured');
-    }
-
-    // Create a more structured prompt for Gemini
     const prompt = `You are an educational assessment expert. Based on the following academic performance data:
 
 Highest performing subject: ${highestSubject.name} (${highestSubject.marks}%)
@@ -96,7 +95,6 @@ Format your response as a valid JSON object with this exact structure:
     console.log('Sending prompt to Gemini API');
 
     try {
-      // Call Gemini API with proper error handling
       const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent', {
         method: 'POST',
         headers: {
@@ -113,7 +111,7 @@ Format your response as a valid JSON object with this exact structure:
             temperature: 0.7,
             topK: 40,
             topP: 0.95,
-            maxOutputTokens: 2048, // Increased token limit
+            maxOutputTokens: 2048,
           },
         }),
       });

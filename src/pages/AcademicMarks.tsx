@@ -167,7 +167,7 @@ export default function AcademicMarks() {
 
       if (marksError) throw marksError;
 
-      // Generate assessment and career roadmap
+      console.log("Calling generate-assessment function...");
       const { data: assessmentResponse, error: assessmentError } = await supabase.functions.invoke(
         'generate-assessment',
         {
@@ -175,7 +175,12 @@ export default function AcademicMarks() {
         }
       );
 
-      if (assessmentError) throw assessmentError;
+      if (assessmentError) {
+        console.error("Assessment generation error:", assessmentError);
+        throw assessmentError;
+      }
+
+      console.log("Assessment response:", assessmentResponse);
 
       toast({
         title: "Success!",
@@ -184,6 +189,7 @@ export default function AcademicMarks() {
 
       setShowAssessment(true);
     } catch (error: any) {
+      console.error("Error in handleSubmit:", error);
       toast({
         title: "Error",
         description: error.message,
