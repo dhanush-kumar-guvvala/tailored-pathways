@@ -53,7 +53,7 @@ serve(async (req) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${Deno.env.get('GEMINI_API_KEY')}`,
+        'Authorization': `Bearer ${Deno.env.get('AIzasyD6hnbzYq5K0xn7AhJOLAmun7nOWYioTao')}`,
       },
       body: JSON.stringify({
         contents: [{
