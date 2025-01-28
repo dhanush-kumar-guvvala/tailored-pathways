@@ -17,7 +17,7 @@ serve(async (req) => {
     const { academicMarks, userId } = await req.json();
 
     // Create the prompt for Gemini
-    const prompt = `Based on the following academic marks, suggest career paths and provide a detailed roadmap for each suggested career. Focus on the student's strengths.
+    const prompt = `create a JSON format  career path file ,Based on the following academic marks, suggest career paths and provide a detailed roadmap for each suggested career. Focus on the student's strengths.
 
     Class 10:
     Mathematics: ${academicMarks.class_10_math}
