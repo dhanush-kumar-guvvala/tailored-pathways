@@ -111,8 +111,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "assessments_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "assessments_id_fkey"
+            columns: ["id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -143,7 +143,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "career_recommendations_user_id_fkey"
+            foreignKeyName: "career_recommendations_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
@@ -153,21 +153,18 @@ export type Database = {
       }
       profiles: {
         Row: {
-          avatar_url: string | null
           email: string | null
           full_name: string | null
           id: string
           updated_at: string | null
         }
         Insert: {
-          avatar_url?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           updated_at?: string | null
         }
         Update: {
-          avatar_url?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
