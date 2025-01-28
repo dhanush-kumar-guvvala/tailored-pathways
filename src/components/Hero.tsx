@@ -25,9 +25,9 @@ export const Hero = () => {
         .from("assessments")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (assessmentError && assessmentError.code !== "PGRST116") {
+      if (assessmentError) {
         throw assessmentError;
       }
 
