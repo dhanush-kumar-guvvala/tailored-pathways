@@ -17,7 +17,7 @@ serve(async (req) => {
     console.log('Received request with marks:', academicMarks);
 
     // Get the API key and log its presence (without revealing the key)
-    const geminiApiKey = Deno.env.get('Gemini-API_KEY');
+    const geminiApiKey = Deno.env.get('Gemini-API-KEY');
     console.log('Gemini API Key present:', !!geminiApiKey);
     
     if (!geminiApiKey) {
