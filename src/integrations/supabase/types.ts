@@ -81,44 +81,6 @@ export type Database = {
           },
         ]
       }
-      assessments: {
-        Row: {
-          assessment_data: Json
-          created_at: string | null
-          highest_subject: Json
-          id: string
-          lowest_subject: Json
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          assessment_data: Json
-          created_at?: string | null
-          highest_subject: Json
-          id?: string
-          lowest_subject: Json
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          assessment_data?: Json
-          created_at?: string | null
-          highest_subject?: Json
-          id?: string
-          lowest_subject?: Json
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "assessments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       career_recommendations: {
         Row: {
           created_at: string | null
